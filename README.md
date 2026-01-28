@@ -1,5 +1,7 @@
 # Wizard Vokabeltrainer
 
+A simple and usefuly Vocabulary Trainer with Light and Dark Mode.
+
 <img width="752" height="612" alt="grafik" src="https://github.com/user-attachments/assets/ebd56d23-5167-47bd-a814-ec332417a281" />
 
 # Licences:
