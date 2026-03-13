@@ -30,3 +30,24 @@ def getGermanToEnglish() -> bool:
         return config.getboolean('Settings', 'germanToEnglish')
     except (configparser.NoSectionError, configparser.NoOptionError):
         return True  # Standardwert, wenn nicht gesetzt
+
+def setWindowSize(width: int, height: int):
+    createSettingsFileIfNotExists()
+    config = configparser.ConfigParser()
+    config.read('settings.ini')
+    if 'Settings' not in config:
+        config['Settings'] = {}
+    config['Settings']['windowWidth'] = str(width)
+    config['Settings']['windowHeight'] = str(height)
+    with open('settings.ini', 'w') as configfile:
+        config.write(configfile)
+
+def getWindowSize() -> (int, int):
+    config = configparser.ConfigParser()
+    config.read('settings.ini')
+    try:
+        width = config.getint('Settings', 'windowWidth')
+        height = config.getint('Settings', 'windowHeight')
+        return width, height
+    except (configparser.NoSectionError, configparser.NoOptionError):
+        return 800, 600  # Standardgröße, wenn nicht gesetzt

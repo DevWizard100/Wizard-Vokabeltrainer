@@ -25,10 +25,10 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self.ui.menuBar())
         self.setStatusBar(self.ui.statusBar())
 
-        self.resize(750, 580)
+        # self.resize(750, 580)
         self.setWindowTitle("Wizard Vokabeltrainer")  # Setzt den Fenstertitel
 
-
+        self.resize(*settingsHandler.getWindowSize())  # Fenstergröße aus den Einstellungen laden
 
 
         # Vokabeln aus der Datei laden
@@ -114,6 +114,8 @@ class MainWindow(QMainWindow):
             self.ui.englishToGermanRadioButton.setChecked(True)
 
     def closeEvent(self, event): # Muss überladen werden das das Programm beim schließen des Hauptfensters auch vollständig beendet wird
+        settingsHandler.setWindowSize(self.width(), self.height()) # Fenstergröße speichern
+
         QApplication.quit()
 
 
