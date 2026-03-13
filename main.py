@@ -1,57 +1,38 @@
 import settingsHandler
 import vokabelHandler
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem, QMessageBox, QTabWidget, QTableWidgetItem
-from win32mica import ApplyMica, MicaTheme
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QFile, Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem, QMessageBox, QTabWidget, QTableWidgetItem, QHBoxLayout
 
 from PySide6.QtCore import QTimer
 import random
 
 class MainWindow(QMainWindow):
     def __init__(self):
-        super().__init__()  # Initialisiert die Basisklasse QMainWindow (Konstruktor)
-
+        super().__init__()  # Initialisiert die Oberklasse QMainWindow (Konstruktor)
         # UI-Datei laden
         loader = QUiLoader()  # Erstellt eine Instanz von QUiLoader, um die .ui-Datei zu laden
-        ui_file = QFile('main.ui')  # Öffnet die .ui-Datei (die Benutzeroberflächendatei)
+        ui_file = QFile('main.ui')  # Öffnet die .UI-Datei
         ui_file.open(QFile.ReadOnly)  # Öffnet die Datei im Nur-Lese-Modus
         self.ui = loader.load(ui_file, self)  # Lädt die .ui-Datei und weist sie self.ui zu
         ui_file.close()  # Schließt die .ui-Datei nach dem Laden
 
-        self.uiWidget = QWidget(self)
-        self.uiWidget.setAutoFillBackground(True)
-
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setStyleSheet("background: transparent;")
-
-        # transparenten background von allen elementen bis auf den fenster hintergrund entfernen
-        for child in self.ui.findChildren(QWidget):
-            child.setAttribute(Qt.WA_TranslucentBackground, False)
-            child.setStyleSheet("background: none;")
-
-
-
-
-        # transparenten background bei tabWidget hinzufügen
-        tabWidget = self.ui.findChild(QTabWidget)
-        if tabWidget:
-            tabWidget.setAttribute(Qt.WA_TranslucentBackground, True)
-            tabWidget.setStyleSheet("background: transparent;")
-
-
-        self.ui.setParent(self.uiWidget)
-        self.uiWidget.setLayout(self.ui.layout())
+        self.uiWidget = QWidget()
+        layout = self.ui.centralwidget.findChild(QHBoxLayout)
+        self.ui.setParent(None)
+        self.uiWidget.setLayout(layout)
         self.setCentralWidget(self.uiWidget)
-        # Setzt das erstellte Widget als zentrales Widget des QMainWindow
+        self.setMenuBar(self.ui.menuBar())
+        self.setStatusBar(self.ui.statusBar())
 
         self.resize(750, 580)
         self.setWindowTitle("Wizard Vokabeltrainer")  # Setzt den Fenstertitel
 
 
+
+
         # Vokabeln aus der Datei laden
-        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.txt")
+        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.csv")
         self.currentGermanVokabel = ""
         self.currentEnglishVokabel = ""
         self.germanToEnglish = settingsHandler.getGermanToEnglish() # Standardmäßig von Englisch nach Deutsch abfragen
@@ -89,7 +70,7 @@ class MainWindow(QMainWindow):
         self.ui.learnedVokabelTableWidget.setRowCount(0)  # Alle Einträge löschen
         # Vokabeln aus der CSV .txt Datei laden und in die learnedVokabelnTableWidget einfügen
         try:
-            with open("learnedVokabeln.txt", "r", encoding="utf-8") as file:
+            with open("learnedVokabeln.csv", "r", encoding="utf-8") as file:
                 for line in file:
                     deutsch, englisch = line.strip().split(",")
                     rowPosition = self.ui.learnedVokabelTableWidget.rowCount()
@@ -111,12 +92,12 @@ class MainWindow(QMainWindow):
             if deutschItem and englischItem:
                 deutsch = deutschItem.text()
                 englisch = englischItem.text()
-                vokabelHandler.addVokabelsToFile("vokabeln.txt", englisch, deutsch)
-                vokabelHandler.removeVokabelFromFile("learnedVokabeln.txt", englisch)
+                vokabelHandler.addVokabelsToFile("vokabeln.csv", englisch, deutsch)
+                vokabelHandler.removeVokabelFromFile("learnedVokabeln.csv", englisch)
                 self.loadVocabularyTableWidget()
                 self.loadLearnedVocabularyTableWidget()
             # Vokabeln neu laden
-            self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.txt")
+            self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.csv")
 
 
         else:
@@ -151,10 +132,10 @@ class MainWindow(QMainWindow):
         self.ui.germanLineEdit.setText("")
         self.ui.englishLineEdit.setText("")
 
-        # Vokabel in die vokabeln.txt datei speichern
-        vokabelHandler.addVokabelsToFile("vokabeln.txt", englisch, deutsch)
+        # Vokabel in die vokabeln.csv datei speichern
+        vokabelHandler.addVokabelsToFile("vokabeln.csv", englisch, deutsch)
         # Vokabeln neu laden
-        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.txt")
+        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.csv")
 
         # Danach englishLineEdit fokussieren
         self.ui.englishLineEdit.setFocus()
@@ -168,23 +149,24 @@ class MainWindow(QMainWindow):
             englischItem = self.ui.vokabelTableWidget.item(selectedRow, 0)
             if englischItem:
                 englisch = englischItem.text()
-                vokabelHandler.removeVokabelFromFile("vokabeln.txt", englisch)
+                vokabelHandler.removeVokabelFromFile("vokabeln.csv", englisch)
                 self.ui.vokabelTableWidget.removeRow(selectedRow)
-                self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.txt")
+                self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.csv")
+
         else:
             QMessageBox.information(self, "Info", "Bitte wähle eine Vokabel zum Löschen aus.")
 
 
     def removePreviousVokabel(self):
         englisch = self.ui.previewEnglishLineEdit.text()
-        vokabelHandler.removeVokabelFromFile("vokabeln.txt", englisch)
-        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.txt")
+        vokabelHandler.removeVokabelFromFile("vokabeln.csv", englisch)
+        self.vokabeln = vokabelHandler.loadVokabelsToArray("vokabeln.csv")
         self.loadVocabularyTableWidget()
 
-        # Gelernte Vokabel in LearnedVokabeln.txt speichern
+        # Gelernte Vokabel in LearnedVokabeln.csv speichern
         deutsch = self.ui.previewDeutschLineEdit.text()
 
-        with open("learnedVokabeln.txt", "a", encoding="utf-8") as file:
+        with open("learnedVokabeln.csv", "a", encoding="utf-8") as file:
             file.write(f"{englisch},{deutsch}\n")
 
         self.loadLearnedVocabularyTableWidget()
@@ -199,12 +181,12 @@ class MainWindow(QMainWindow):
 
 
     def loadVocabularyTableWidget(self):
-        # loadVocabularyTableWidget löscht zuerst alle einträge in der vokabelTableWidget und lädt dann alle vokabeln aus der vokabeln.txt datei neu
+        # loadVocabularyTableWidget löscht zuerst alle einträge in der vokabelTableWidget und lädt dann alle vokabeln aus der vokabeln.csv datei neu
         self.ui.vokabelTableWidget.setRowCount(0)  # Alle Einträge löschen
 
         # Vokabeln aus der CSV .txt Datei laden und in die vokabelTableWidget einfügen
         try:
-            with open("vokabeln.txt", "r", encoding="utf-8") as file:
+            with open("vokabeln.csv", "r", encoding="utf-8") as file:
                 for line in file:
                     deutsch, englisch = line.strip().split(",")
                     rowPosition = self.ui.vokabelTableWidget.rowCount()
@@ -302,8 +284,21 @@ class MainWindow(QMainWindow):
             elif buttonNumber == 3:
                 self.ui.choose3Btn.setEnabled(False)
 
+    from PySide6.QtCore import Qt
 
-
+    # Fügen Sie diese Methode zur MainWindow-Klasse hinzu
+    def keyPressEvent(self, event):
+        if getattr(self, "easy_question_active", False):
+            if event.key() == Qt.Key_1:
+                self.nextEasyVokabel(1)
+            elif event.key() == Qt.Key_2:
+                self.nextEasyVokabel(2)
+            elif event.key() == Qt.Key_3:
+                self.nextEasyVokabel(3)
+            else:
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
 
     def resetEasyButtonsColors(self):
         self.ui.choose1Btn.setStyleSheet("background-color: none; color: none;")
@@ -367,8 +362,6 @@ if __name__ == "__main__":
     app.setQuitOnLastWindowClosed(False)  # Verhindert, dass die Anwendung beendet wird, wenn das letzte Fenster geschlossen wird
     window = MainWindow()  # Erstellt eine Instanz des Hauptfensters (MainWindow)
     window.show()  # Zeigt das Hauptfenster an
-
-    ApplyMica(window.winId(), MicaTheme.AUTO)
 
 
     app.exec()  # Startet die Ereignisschleife der Anwendung
