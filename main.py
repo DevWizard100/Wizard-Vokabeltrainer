@@ -113,8 +113,13 @@ class MainWindow(QMainWindow):
         else:
             self.ui.englishToGermanRadioButton.setChecked(True)
 
-    def closeEvent(self, event): # Muss überladen werden das das Programm beim schließen des Hauptfensters auch vollständig beendet wird
-        settingsHandler.setWindowSize(self.width(), self.height()) # Fenstergröße speichern
+    def closeEvent(self, event):
+        # Fenstergröße nur speichern, wenn sie sich auch wirklich geändert hat, damit nicht bei jedem schließen die aktuelle Fenstergröße in die settings.ini geschrieben wird
+        currentWidth, currentHeight = settingsHandler.getWindowSize()
+        if self.width() != currentWidth or self.height() != currentHeight:
+            # Nicht speichern, wenn das Fenster maximiert ist
+            if not self.isMaximized():
+                settingsHandler.setWindowSize(self.width(), self.height())
 
         QApplication.quit()
 
