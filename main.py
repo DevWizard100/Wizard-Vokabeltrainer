@@ -291,6 +291,11 @@ class MainWindow(QMainWindow):
             elif buttonNumber == 3:
                 self.ui.choose3Btn.setEnabled(False)
 
+        # Die ausgewählte English vokabel im asyPreviewEnglishLineEdit hinzufügen und die deutsch im easyPreviewGermanLineEdit aber nur wenn die Antwort richtig war
+        if userAnswer.strip().lower() == self.easy_correct_answer.strip().lower():
+            self.ui.easyPreviewEnglishLineEdit.setText(self.currentGermanVokabel)
+            self.ui.easyPreviewGermanLineEdit.setText(self.currentEnglishVokabel)
+
     from PySide6.QtCore import Qt
 
     # Fügen Sie diese Methode zur MainWindow-Klasse hinzu
